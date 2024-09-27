@@ -22,8 +22,8 @@
 #pragma once
 
 #include <memory.h>
-#include <stdlib.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #ifndef DYNVEC_MALLOC
 #define DYNVEC_MALLOC(sz) malloc(sz)
@@ -37,9 +37,8 @@
 #define DYNVEC_FREE(p) free(p)
 #endif
 
-typedef struct
-{
-    uint8_t *data;     /* Data stored */
+typedef struct {
+    uint8_t* data;     /* Data stored */
     size_t size;       /* Size in bytes of used array (elemsize * count) */
     size_t elemsize;   /* Element size in bytes */
     uint32_t count;    /* Number of elements */
@@ -58,7 +57,7 @@ dynvec dvalloc(size_t elemsize, uint32_t count);
  *
  *  dv      is the dynamic vector to free
  */
-void dvfree(dynvec *dv);
+void dvfree(dynvec* dv);
 
 /* Reserve the capacity of a dynamic vector to a new given capacity. On failure
  * nothing happens.
@@ -66,21 +65,21 @@ void dvfree(dynvec *dv);
  *  dv      is the dynamic vector to reserve
  *  newcap  is the new capacity in number of elements
  */
-void dvreserve(dynvec *dv, uint32_t newcap);
+void dvreserve(dynvec* dv, uint32_t newcap);
 
 /* Push an element to the back of the dynamic vector.
  *
  *  dv      is the dynamic vector to push to
  *  elem    is the new element to push
  */
-void dvpush(dynvec *dv, const void *elem);
+void dvpush(dynvec* dv, const void* elem);
 
 /* Pop an element from the back of the dynamic vector.
  *
  *  dv      is the dynamic vector to pop from
  *  elem    is where the element is popped to
  */
-void dvpop(dynvec *dv, void *elem);
+void dvpop(dynvec* dv, void* elem);
 
 /* Get an element at index i from the dynamic vector.
  *
@@ -88,7 +87,7 @@ void dvpop(dynvec *dv, void *elem);
  *  i       is the index
  *  elem    is where the element is returned to
  */
-void dvget(dynvec *dv, uint32_t i, void *elem);
+void dvget(dynvec* dv, uint32_t i, void* elem);
 
 /* Set an element at index i in the dynamic vector.
  *
@@ -96,14 +95,16 @@ void dvget(dynvec *dv, uint32_t i, void *elem);
  *  i       is the index
  *  elem    is the new element set
  */
-void dvset(dynvec *dv, uint32_t i, const void *elem);
+void dvset(dynvec* dv, uint32_t i, const void* elem);
 
 #ifdef DYNVEC_IMPLEMENTATION
 
 dynvec dvalloc(size_t elemsize, uint32_t count)
 {
-    if (count < 1)
+    if (count < 1) {
         count = 1;
+    }
+
     return (dynvec){
         .data = DYNVEC_MALLOC(elemsize * count),
         .elemsize = elemsize,
@@ -111,44 +112,50 @@ dynvec dvalloc(size_t elemsize, uint32_t count)
     };
 }
 
-void dvfree(dynvec *dv)
+void dvfree(dynvec* dv)
 {
-    if (!dv)
+    if (!dv) {
         return;
+    }
 
     DYNVEC_FREE(dv->data);
     memset(dv, 0, sizeof(*dv));
 }
 
-void dvreserve(dynvec *dv, uint32_t newcap)
+void dvreserve(dynvec* dv, uint32_t newcap)
 {
-    if (!dv)
+    if (!dv) {
         return;
+    }
 
     dv->capacity = newcap;
     size_t newsize = dv->elemsize * dv->capacity;
-    uint8_t *temp = DYNVEC_REALLOC(dv->data, newsize);
-    if (temp)
+    uint8_t* temp = DYNVEC_REALLOC(dv->data, newsize);
+    if (temp) {
         dv->data = temp;
+    }
 }
 
-void dvpush(dynvec *dv, void *elem)
+void dvpush(dynvec* dv, void* elem)
 {
-    if (!dv || !elem)
+    if (!dv || !elem) {
         return;
+    }
 
-    if (dv->count == dv->capacity)
+    if (dv->count == dv->capacity) {
         dvreserve(dv, 2 * dv->capacity);
+    }
 
     memcpy(dv->data + dv->count * dv->elemsize, elem, dv->elemsize);
     dv->count += 1;
     dv->size = dv->elemsize * dv->count;
 }
 
-void dvpop(dynvec *dv, void *elem)
+void dvpop(dynvec* dv, void* elem)
 {
-    if (!dv)
+    if (!dv) {
         return;
+    }
 
     dv->count -= 1;
     dv->size = dv->elemsize * dv->count;
@@ -157,21 +164,22 @@ void dvpop(dynvec *dv, void *elem)
         memcpy(elem, dv->data + dv->count * dv->elemsize, dv->elemsize);
 }
 
-void dvget(dynvec *dv, uint32_t i, void *elem)
+void dvget(dynvec* dv, uint32_t i, void* elem)
 {
-    if (!dv || !elem)
+    if (!dv || !elem) {
         return;
+    }
 
     memcpy(elem, dv->data + i * dv->elemsize, dv->elemsize);
 }
 
-void dvset(dynvec *dv, uint32_t i, const void *elem)
+void dvset(dynvec* dv, uint32_t i, const void* elem)
 {
-    if (!dv || !elem)
+    if (!dv || !elem) {
         return;
+    }
 
-    if (i >= dv->count)
-    {
+    if (i >= dv->count) {
         dv->count = i + 1;
         dv->size = dv->elemsize * dv->count;
     }

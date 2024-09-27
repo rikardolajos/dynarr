@@ -1,4 +1,4 @@
-void *checked_malloc(size_t sz);
+void* checked_malloc(size_t sz);
 
 #define DYNVEC_IMPLEMENTATION
 #define DYNVEC_MALLOC(sz) checked_malloc(sz)
@@ -8,9 +8,9 @@ void *checked_malloc(size_t sz);
 #include <stdbool.h>
 #include <stdio.h>
 
-void *checked_malloc(size_t sz)
+void* checked_malloc(size_t sz)
 {
-    void *p = malloc(sz);
+    void* p = malloc(sz);
     if (!p)
         printf("Unable to allocate memory\n");
     return p;
@@ -48,8 +48,7 @@ void test_push()
 {
     dynvec dv = dvalloc(sizeof(int), 1);
 
-    for (int i = 0; i < 10; i++)
-    {
+    for (int i = 0; i < 10; i++) {
         dvpush(&dv, &i);
     }
     assert(dv.count == 10);
@@ -61,15 +60,13 @@ void test_pop()
 {
     dynvec dv = dvalloc(sizeof(int), 1);
 
-    for (int i = 0; i < 10; i++)
-    {
+    for (int i = 0; i < 10; i++) {
         int j = 91;
         dvpush(&dv, &j);
     }
 
     int i = 0;
-    while (dv.count)
-    {
+    while (dv.count) {
         dvpop(&dv, NULL);
         i++;
     }
@@ -97,14 +94,12 @@ void test_set()
 {
     dynvec dv = dvalloc(sizeof(int), 10);
 
-    for (int i = 0; i < 10; i++)
-    {
+    for (int i = 0; i < 10; i++) {
         int j = 25;
         dvset(&dv, i, &j);
     }
 
-    while (dv.count)
-    {
+    while (dv.count) {
         int k;
         dvpop(&dv, &k);
         assert(k == 25);
