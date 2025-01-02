@@ -1,7 +1,7 @@
 # dynarr
 
-This is a small header-only library that implements a dynamic vector in C. 
-It can store generic types and has some basic functionality for pushing, popping, getting, and setting elements in the vector.
+This is a small header-only library that implements a dynamic array in C. 
+It can store generic types and has some basic functionality for pushing, popping, getting, and setting elements in the array.
 
 
 ## Usage
@@ -14,8 +14,8 @@ In **exactly one** C file you will have to define `DYNARR_IMPLEMENTATION` before
 #include "dynarr.h"
 ```
 
-Allocate a dynamic vector with `daalloc()`, and free the memory resources with `dafree()` after use.
-Access the fields of the `dynarr` struct to see the details of the vector:
+Allocate a dynamic array with `daalloc()`, and free the memory resources with `dafree()` after use.
+Access the fields of the `dynarr` struct to see the details of the array:
 
 ```C
 typedef struct
