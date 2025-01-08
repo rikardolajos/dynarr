@@ -46,7 +46,7 @@ typedef struct {
 } dynarr;
 
 /* Allocate a new dynamic array. An allocated dynamic array has to be freed
- * using dvfree().
+ * using dafree().
  *
  *  elemsize    is the size of each element in bytes
  *  count       is the reserved capacity of the array
@@ -55,47 +55,47 @@ dynarr daalloc(size_t elemsize, uint32_t count);
 
 /* Free allocated memory of the dynamic array and reset fields to zero.
  *
- *  dv      is the dynamic array to free
+ *  da      is the dynamic array to free
  */
-void dvfree(dynarr* dv);
+void dafree(dynarr* da);
 
 /* Reserve the capacity of a dynamic array to a new given capacity. On failure
  * nothing happens.
  *
- *  dv      is the dynamic array to reserve
+ *  da      is the dynamic array to reserve
  *  newcap  is the new capacity in number of elements
  */
-void dvreserve(dynarr* dv, uint32_t newcap);
+void dareserve(dynarr* da, uint32_t newcap);
 
 /* Push an element to the back of the dynamic array.
  *
- *  dv      is the dynamic array to push to
+ *  da      is the dynamic array to push to
  *  elem    is the new element to push
  */
-void dvpush(dynarr* dv, const void* elem);
+void dapush(dynarr* da, const void* elem);
 
 /* Pop an element from the back of the dynamic array.
  *
- *  dv      is the dynamic array to pop from
+ *  da      is the dynamic array to pop from
  *  elem    is where the element is popped to
  */
-void dvpop(dynarr* dv, void* elem);
+void dapop(dynarr* da, void* elem);
 
 /* Get an element at index i from the dynamic array.
  *
- *  dv      is the dynamic array get from
+ *  da      is the dynamic array get from
  *  i       is the index
  *  elem    is where the element is returned to
  */
-void dvget(dynarr* dv, uint32_t i, void* elem);
+void daget(dynarr* da, uint32_t i, void* elem);
 
 /* Set an element at index i in the dynamic array.
  *
- *  dv      is the dynamic array set to
+ *  da      is the dynamic array set to
  *  i       is the index
  *  elem    is the new element set
  */
-void dvset(dynarr* dv, uint32_t i, const void* elem);
+void daset(dynarr* da, uint32_t i, const void* elem);
 
 #ifdef DYNARR_IMPLEMENTATION
 
@@ -112,79 +112,79 @@ dynarr daalloc(size_t elemsize, uint32_t count)
     };
 }
 
-void dafree(dynarr* dv)
+void dafree(dynarr* da)
 {
-    if (!dv) {
+    if (!da) {
         return;
     }
 
-    DYNARR_FREE(dv->data);
-    memset(dv, 0, sizeof(*dv));
+    DYNARR_FREE(da->data);
+    memset(da, 0, sizeof(*da));
 }
 
-void dareserve(dynarr* dv, uint32_t newcap)
+void dareserve(dynarr* da, uint32_t newcap)
 {
-    if (!dv) {
+    if (!da) {
         return;
     }
 
-    dv->capacity = newcap;
-    size_t newsize = dv->elemsize * dv->capacity;
-    uint8_t* temp = DYNARR_REALLOC(dv->data, newsize);
+    da->capacity = newcap;
+    size_t newsize = da->elemsize * da->capacity;
+    uint8_t* temp = DYNARR_REALLOC(da->data, newsize);
     if (temp) {
-        dv->data = temp;
+        da->data = temp;
     }
 }
 
-void dapush(dynarr* dv, void* elem)
+void dapush(dynarr* da, void* elem)
 {
-    if (!dv || !elem) {
+    if (!da || !elem) {
         return;
     }
 
-    if (dv->count == dv->capacity) {
-        dareserve(dv, 2 * dv->capacity);
+    if (da->count == da->capacity) {
+        dareserve(da, 2 * da->capacity);
     }
 
-    memcpy(dv->data + dv->count * dv->elemsize, elem, dv->elemsize);
-    dv->count += 1;
-    dv->size = dv->elemsize * dv->count;
+    memcpy(da->data + da->count * da->elemsize, elem, da->elemsize);
+    da->count += 1;
+    da->size = da->elemsize * da->count;
 }
 
-void dapop(dynarr* dv, void* elem)
+void dapop(dynarr* da, void* elem)
 {
-    if (!dv) {
+    if (!da) {
         return;
     }
 
-    dv->count -= 1;
-    dv->size = dv->elemsize * dv->count;
+    da->count -= 1;
+    da->size = da->elemsize * da->count;
 
     if (elem)
-        memcpy(elem, dv->data + dv->count * dv->elemsize, dv->elemsize);
+        memcpy(elem, da->data + da->count * da->elemsize, da->elemsize);
 }
 
-void daget(dynarr* dv, uint32_t i, void* elem)
+void daget(dynarr* da, uint32_t i, void* elem)
 {
-    if (!dv || !elem) {
+    if (!da || !elem) {
         return;
     }
 
-    memcpy(elem, dv->data + i * dv->elemsize, dv->elemsize);
+    memcpy(elem, da->data + i * da->elemsize, da->elemsize);
 }
 
-void daset(dynarr* dv, uint32_t i, const void* elem)
+void daset(dynarr* da, uint32_t i, const void* elem)
 {
-    if (!dv || !elem) {
+    if (!da || !elem) {
         return;
     }
 
-    if (i >= dv->count) {
-        dv->count = i + 1;
-        dv->size = dv->elemsize * dv->count;
+    if (i >= da->count) {
+        da->count = i + 1;
+        da->size = da->elemsize * da->count;
     }
 
-    memcpy(dv->data + i * dv->elemsize, elem, dv->elemsize);
+    memcpy(da->data + i * da->elemsize, elem, da->elemsize);
 }
 
 #endif /* DYNARR_IMPLEMENTATION */
