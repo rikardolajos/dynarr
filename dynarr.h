@@ -83,15 +83,15 @@ void* _dapop(dynarr* da);
 
 /* Get an element at index i from the dynamic array.
  *
- *  da      is the dynamic array get from
+ *  da      is the dynamic array to get from
  *  i       is the index
  */
-#define daget(da, index, type) (*((type*)_daget((da), (index))))
+#define daget(da, i, type) (*((type*)_daget((da), (i))))
 void* _daget(dynarr* da, uint32_t i);
 
 /* Set an element at index i in the dynamic array.
  *
- *  da      is the dynamic array set to
+ *  da      is the dynamic array to set to
  *  i       is the index
  *  elem    is the new element set
  */
