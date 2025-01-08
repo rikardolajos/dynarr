@@ -77,17 +77,17 @@ void dapush(dynarr* da, const void* elem);
 /* Pop an element from the back of the dynamic array.
  *
  *  da      is the dynamic array to pop from
- *  elem    is where the element is popped to
  */
-void dapop(dynarr* da, void* elem);
+#define dapop(da, type) (*((type*)_dapop((da))))
+void* _dapop(dynarr* da);
 
 /* Get an element at index i from the dynamic array.
  *
  *  da      is the dynamic array get from
  *  i       is the index
- *  elem    is where the element is returned to
  */
-void daget(dynarr* da, uint32_t i, void* elem);
+#define daget(da, index, type) (*((type*)_daget((da), (index))))
+void* _daget(dynarr* da, uint32_t i);
 
 /* Set an element at index i in the dynamic array.
  *
@@ -151,26 +151,25 @@ void dapush(dynarr* da, void* elem)
     da->size = da->elemsize * da->count;
 }
 
-void dapop(dynarr* da, void* elem)
+void* _dapop(dynarr* da)
 {
     if (!da) {
-        return;
+        return NULL;
     }
 
     da->count -= 1;
     da->size = da->elemsize * da->count;
 
-    if (elem)
-        memcpy(elem, da->data + da->count * da->elemsize, da->elemsize);
+    return da->data + da->count * da->elemsize;
 }
 
-void daget(dynarr* da, uint32_t i, void* elem)
+void* _daget(dynarr* da, uint32_t i)
 {
-    if (!da || !elem) {
-        return;
+    if (!da) {
+        return NULL;
     }
 
-    memcpy(elem, da->data + i * da->elemsize, da->elemsize);
+    return da->data + i * da->elemsize;
 }
 
 void daset(dynarr* da, uint32_t i, const void* elem)
