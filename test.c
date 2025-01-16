@@ -67,7 +67,7 @@ void test_pop()
 
     int i = 0;
     while (dv.count) {
-        dapop(&dv, NULL);
+        dapop(&dv, int);
         i++;
     }
     assert(dv.count == 0);
@@ -83,8 +83,7 @@ void test_get()
     int i = 8;
     dapush(&dv, &i);
 
-    int j;
-    daget(&dv, 0, &j);
+    int j = daget(&dv, 0, int);
     assert(j == 8);
 
     dafree(&dv);
@@ -100,8 +99,7 @@ void test_set()
     }
 
     while (dv.count) {
-        int k;
-        dapop(&dv, &k);
+        int k = dapop(&dv, int);
         assert(k == 25);
     }
 
@@ -114,7 +112,7 @@ int main()
     test_alloc();
 
     printf("Testing dareserve()\n");
-    test_reserve();
+    test_resize();
 
     printf("Testing dapush()\n");
     test_push();
