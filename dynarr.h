@@ -49,9 +49,9 @@ typedef struct {
  * using dafree().
  *
  *  elemsize    is the size of each element in bytes
- *  count       is the reserved capacity of the array
+ *  capacity    is the reserved capacity of the array
  */
-dynarr daalloc(size_t elemsize, uint32_t count);
+dynarr daalloc(size_t elemsize, uint32_t capacity);
 
 /* Free allocated memory of the dynamic array and reset fields to zero.
  *
@@ -62,10 +62,10 @@ void dafree(dynarr* da);
 /* Reserve the capacity of a dynamic array to a new given capacity. On failure
  * nothing happens.
  *
- *  da      is the dynamic array to reserve
- *  newcap  is the new capacity in number of elements
+ *  da          is the dynamic array to reserve
+ *  capacity    is the new capacity in number of elements
  */
-void dareserve(dynarr* da, uint32_t newcap);
+void dareserve(dynarr* da, uint32_t capacity);
 
 /* Push an element to the back of the dynamic array.
  *
@@ -99,16 +99,16 @@ void daset(dynarr* da, uint32_t i, const void* elem);
 
 #ifdef DYNARR_IMPLEMENTATION
 
-dynarr daalloc(size_t elemsize, uint32_t count)
+dynarr daalloc(size_t elemsize, uint32_t capacity)
 {
-    if (count < 1) {
-        count = 1;
+    if (capacity < 1) {
+        capacity = 1;
     }
 
     return (dynarr){
-        .data = DYNARR_MALLOC(elemsize * count),
+        .data = DYNARR_MALLOC(elemsize * capacity),
         .elemsize = elemsize,
-        .capacity = count,
+        .capacity = capacity,
     };
 }
 
@@ -122,13 +122,13 @@ void dafree(dynarr* da)
     memset(da, 0, sizeof(*da));
 }
 
-void dareserve(dynarr* da, uint32_t newcap)
+void dareserve(dynarr* da, uint32_t capacity)
 {
     if (!da) {
         return;
     }
 
-    da->capacity = newcap;
+    da->capacity = capacity;
     size_t newsize = da->elemsize * da->capacity;
     uint8_t* temp = DYNARR_REALLOC(da->data, newsize);
     if (temp) {
