@@ -103,6 +103,13 @@ void test_set()
         assert(k == 25);
     }
 
+    int i = 1;
+    void* dst = daset(&dv, 36, &i);
+
+    if (dst) {
+        printf("Error: expected NULL on out-of-bounds\n");
+    }
+
     dafree(&dv);
 }
 
@@ -112,7 +119,7 @@ int main()
     test_alloc();
 
     printf("Testing dareserve()\n");
-    test_resize();
+    test_reserve();
 
     printf("Testing dapush()\n");
     test_push();

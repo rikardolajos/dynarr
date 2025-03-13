@@ -21,6 +21,7 @@
 
 #pragma once
 
+#include <assert.h>
 #include <memory.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -89,13 +90,14 @@ void* _dapop(dynarr* da);
 #define daget(da, i, type) (*((type*)_daget((da), (i))))
 void* _daget(dynarr* da, uint32_t i);
 
-/* Set an element at index i in the dynamic array.
+/* Set an element at index i in the dynamic array. Returns a pointer to where
+ * the element is written, or NULL on failure.
  *
  *  da      is the dynamic array to set to
  *  i       is the index
  *  elem    is the new element set
  */
-void daset(dynarr* da, uint32_t i, const void* elem);
+void* daset(dynarr* da, uint32_t i, const void* elem);
 
 #ifdef DYNARR_IMPLEMENTATION
 
@@ -114,9 +116,7 @@ dynarr daalloc(size_t elemsize, uint32_t capacity)
 
 void dafree(dynarr* da)
 {
-    if (!da) {
-        return;
-    }
+    assert(da);
 
     DYNARR_FREE(da->data);
     memset(da, 0, sizeof(*da));
@@ -124,9 +124,7 @@ void dafree(dynarr* da)
 
 void dareserve(dynarr* da, uint32_t capacity)
 {
-    if (!da) {
-        return;
-    }
+    assert(da);
 
     da->capacity = capacity;
     size_t newsize = da->elemsize * da->capacity;
@@ -138,9 +136,8 @@ void dareserve(dynarr* da, uint32_t capacity)
 
 void dapush(dynarr* da, void* elem)
 {
-    if (!da || !elem) {
-        return;
-    }
+    assert(da);
+    assert(elem);
 
     if (da->count == da->capacity) {
         dareserve(da, 2 * da->capacity);
@@ -153,9 +150,7 @@ void dapush(dynarr* da, void* elem)
 
 void* _dapop(dynarr* da)
 {
-    if (!da) {
-        return NULL;
-    }
+    assert(da);
 
     da->count -= 1;
     da->size = da->elemsize * da->count;
@@ -165,17 +160,18 @@ void* _dapop(dynarr* da)
 
 void* _daget(dynarr* da, uint32_t i)
 {
-    if (!da) {
-        return NULL;
-    }
+    assert(da);
 
     return da->data + i * da->elemsize;
 }
 
-void daset(dynarr* da, uint32_t i, const void* elem)
+void* daset(dynarr* da, uint32_t i, const void* elem)
 {
-    if (!da || !elem) {
-        return;
+    assert(da);
+    assert(elem);
+
+    if (i >= da->capacity) {
+        return NULL;
     }
 
     if (i >= da->count) {
@@ -183,7 +179,7 @@ void daset(dynarr* da, uint32_t i, const void* elem)
         da->size = da->elemsize * da->count;
     }
 
-    memcpy(da->data + i * da->elemsize, elem, da->elemsize);
+    return memcpy(da->data + i * da->elemsize, elem, da->elemsize);
 }
 
 #endif /* DYNARR_IMPLEMENTATION */
