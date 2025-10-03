@@ -18,7 +18,7 @@ void* checked_malloc(size_t sz)
 
 void test_alloc()
 {
-    dynarr da = daalloc(sizeof(int), 5);
+    dynarr da = daalloc(int, 5);
 
     assert(da.data != NULL);
     assert(da.size != 0);
@@ -36,7 +36,7 @@ void test_alloc()
 
 void test_reserve()
 {
-    dynarr da = daalloc(sizeof(int), 0);
+    dynarr da = daalloc(int, 0);
 
     dareserve(&da, 10);
     assert(da.capacity == 10);
@@ -46,7 +46,7 @@ void test_reserve()
 
 void test_push()
 {
-    dynarr da = daalloc(sizeof(int), 0);
+    dynarr da = daalloc(int, 0);
 
     for (int i = 0; i < 10; i++) {
         dapush(&da, &i);
@@ -58,7 +58,7 @@ void test_push()
 
 void test_pop()
 {
-    dynarr da = daalloc(sizeof(int), 0);
+    dynarr da = daalloc(int, 0);
 
     for (int i = 0; i < 10; i++) {
         int j = 91;
@@ -78,7 +78,7 @@ void test_pop()
 
 void test_get()
 {
-    dynarr da = daalloc(sizeof(int), 0);
+    dynarr da = daalloc(int, 0);
 
     int i = 8;
     dapush(&da, &i);
@@ -91,7 +91,7 @@ void test_get()
 
 void test_set()
 {
-    dynarr da = daalloc(sizeof(int), 10);
+    dynarr da = daalloc(int, 10);
 
     for (int i = 0; i < 10; i++) {
         daset(&da, i, int, 25);

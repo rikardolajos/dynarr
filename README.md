@@ -36,7 +36,7 @@ These fields should not be written to by the user.
 ### Example usage
 ```C
 /* Allocate new dynamic array with 5 int elements (zero-initialized) */
-dynarr da = daalloc(sizeof(int), 5);
+dynarr da = daalloc(int, 5);
 
 /* Set first three elements to 6, 7, 8 */
 daset(&da, 0, int, 6);

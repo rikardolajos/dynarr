@@ -49,10 +49,11 @@ typedef struct {
 /* Allocate a new dynamic array. An allocated dynamic array has to be freed
  * using dafree(). Elements are zero-initialized.
  *
- *  elemsize    is the size of each element in bytes
- *  count       is the number of elements to start with
+ *  type    is the type of the elements
+ *  count   is the number of elements to start with
  */
-dynarr daalloc(size_t elemsize, uint32_t count);
+#define daalloc(type, count) (_daalloc(sizeof(type), (count)));
+dynarr _daalloc(size_t elemsize, uint32_t count);
 
 /* Free allocated memory of the dynamic array and reset fields to zero.
  *
@@ -102,7 +103,7 @@ void* _daset(dynarr* da, uint32_t i, const void* elem);
 
 #ifdef DYNARR_IMPLEMENTATION
 
-dynarr daalloc(size_t elemsize, uint32_t count)
+dynarr _daalloc(size_t elemsize, uint32_t count)
 {
     uint32_t capacity = count;
 
