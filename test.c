@@ -18,99 +18,99 @@ void* checked_malloc(size_t sz)
 
 void test_alloc()
 {
-    dynarr dv = daalloc(sizeof(int), 5);
+    dynarr da = daalloc(sizeof(int), 5);
 
-    assert(dv.data != NULL);
-    assert(dv.size == 0);
-    assert(dv.elemsize == sizeof(int));
-    assert(dv.count == 0);
-    assert(dv.capacity == 5);
+    assert(da.data != NULL);
+    assert(da.size == 0);
+    assert(da.elemsize == sizeof(int));
+    assert(da.count == 0);
+    assert(da.capacity == 5);
 
-    dafree(&dv);
-    assert(dv.data == NULL);
-    assert(dv.size == 0);
-    assert(dv.elemsize == 0);
-    assert(dv.count == 0);
-    assert(dv.capacity == 0);
+    dafree(&da);
+    assert(da.data == NULL);
+    assert(da.size == 0);
+    assert(da.elemsize == 0);
+    assert(da.count == 0);
+    assert(da.capacity == 0);
 }
 
 void test_reserve()
 {
-    dynarr dv = daalloc(sizeof(int), 1);
+    dynarr da = daalloc(sizeof(int), 1);
 
-    dareserve(&dv, 10);
-    assert(dv.capacity == 10);
+    dareserve(&da, 10);
+    assert(da.capacity == 10);
 
-    dafree(&dv);
+    dafree(&da);
 }
 
 void test_push()
 {
-    dynarr dv = daalloc(sizeof(int), 1);
+    dynarr da = daalloc(sizeof(int), 1);
 
     for (int i = 0; i < 10; i++) {
-        dapush(&dv, &i);
+        dapush(&da, &i);
     }
-    assert(dv.count == 10);
+    assert(da.count == 10);
 
-    dafree(&dv);
+    dafree(&da);
 }
 
 void test_pop()
 {
-    dynarr dv = daalloc(sizeof(int), 1);
+    dynarr da = daalloc(sizeof(int), 1);
 
     for (int i = 0; i < 10; i++) {
         int j = 91;
-        dapush(&dv, &j);
+        dapush(&da, &j);
     }
 
     int i = 0;
-    while (dv.count) {
-        dapop(&dv, int);
+    while (da.count) {
+        dapop(&da, int);
         i++;
     }
-    assert(dv.count == 0);
+    assert(da.count == 0);
     assert(i == 10);
 
-    dafree(&dv);
+    dafree(&da);
 }
 
 void test_get()
 {
-    dynarr dv = daalloc(sizeof(int), 1);
+    dynarr da = daalloc(sizeof(int), 1);
 
     int i = 8;
-    dapush(&dv, &i);
+    dapush(&da, &i);
 
-    int j = daget(&dv, 0, int);
+    int j = daget(&da, 0, int);
     assert(j == 8);
 
-    dafree(&dv);
+    dafree(&da);
 }
 
 void test_set()
 {
-    dynarr dv = daalloc(sizeof(int), 10);
+    dynarr da = daalloc(sizeof(int), 10);
 
     for (int i = 0; i < 10; i++) {
         int j = 25;
-        daset(&dv, i, &j);
+        daset(&da, i, &j);
     }
 
-    while (dv.count) {
-        int k = dapop(&dv, int);
+    while (da.count) {
+        int k = dapop(&da, int);
         assert(k == 25);
     }
 
     int i = 1;
-    void* dst = daset(&dv, 36, &i);
+    void* dst = daset(&da, 36, &i);
 
     if (dst) {
         printf("Error: expected NULL on out-of-bounds\n");
     }
 
-    dafree(&dv);
+    dafree(&da);
 }
 
 int main()
