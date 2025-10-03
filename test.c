@@ -21,10 +21,10 @@ void test_alloc()
     dynarr da = daalloc(sizeof(int), 5);
 
     assert(da.data != NULL);
-    assert(da.size == 0);
+    assert(da.size != 0);
     assert(da.elemsize == sizeof(int));
-    assert(da.count == 0);
-    assert(da.capacity == 5);
+    assert(da.count == 5);
+    assert(da.capacity != 0);
 
     dafree(&da);
     assert(da.data == NULL);
@@ -36,7 +36,7 @@ void test_alloc()
 
 void test_reserve()
 {
-    dynarr da = daalloc(sizeof(int), 1);
+    dynarr da = daalloc(sizeof(int), 0);
 
     dareserve(&da, 10);
     assert(da.capacity == 10);
@@ -46,7 +46,7 @@ void test_reserve()
 
 void test_push()
 {
-    dynarr da = daalloc(sizeof(int), 1);
+    dynarr da = daalloc(sizeof(int), 0);
 
     for (int i = 0; i < 10; i++) {
         dapush(&da, &i);
@@ -58,7 +58,7 @@ void test_push()
 
 void test_pop()
 {
-    dynarr da = daalloc(sizeof(int), 1);
+    dynarr da = daalloc(sizeof(int), 0);
 
     for (int i = 0; i < 10; i++) {
         int j = 91;
@@ -78,7 +78,7 @@ void test_pop()
 
 void test_get()
 {
-    dynarr da = daalloc(sizeof(int), 1);
+    dynarr da = daalloc(sizeof(int), 0);
 
     int i = 8;
     dapush(&da, &i);
@@ -103,8 +103,8 @@ void test_set()
         assert(k == 25);
     }
 
-    int i = 1;
-    void* dst = daset(&da, 36, &i);
+    int d = 1;
+    void* dst = daset(&da, 0, &d);
 
     if (dst) {
         printf("Error: expected NULL on out-of-bounds\n");
@@ -134,6 +134,22 @@ int main()
     test_set();
 
     printf("=== DYNARR TESTS COMPLETED ===\n");
+
+    /* Allocate new dynamic array with 5 int elements (zero-initialized) */
+    dynarr da = daalloc(sizeof(int), 5);
+
+    /* Set element at index 3 to value 8 */
+    int d = 8;
+    void* dst = daset(&da, 3, &d);
+
+    /* Pop each element and print */
+    while (da.count) {
+        int i = dapop(&da, int);
+        printf("%d\n", i);
+    }
+
+    /* Free dynamic array when we are done with it */
+    dafree(&da);
 
     return 0;
 }

@@ -40,19 +40,19 @@
 
 typedef struct {
     uint8_t* data;     /* Data stored */
-    size_t size;       /* Size in bytes of used array (elemsize * count) */
+    size_t size;       /* Size in bytes of array (elemsize * count) */
     size_t elemsize;   /* Element size in bytes */
     uint32_t count;    /* Number of elements */
     uint32_t capacity; /* Capacity in number of elements */
 } dynarr;
 
 /* Allocate a new dynamic array. An allocated dynamic array has to be freed
- * using dafree().
+ * using dafree(). Elements are zero-initialized.
  *
  *  elemsize    is the size of each element in bytes
- *  capacity    is the reserved capacity of the array
+ *  count       is the number of elements to start with
  */
-dynarr daalloc(size_t elemsize, uint32_t capacity);
+dynarr daalloc(size_t elemsize, uint32_t count);
 
 /* Free allocated memory of the dynamic array and reset fields to zero.
  *
@@ -94,22 +94,31 @@ void* _daget(dynarr* da, uint32_t i);
  * the element is written, or NULL on failure.
  *
  *  da      is the dynamic array to set to
- *  i       is the index
+ *  i       is the index, has to be less than da->count
  *  elem    is the new element set
  */
 void* daset(dynarr* da, uint32_t i, const void* elem);
 
 #ifdef DYNARR_IMPLEMENTATION
 
-dynarr daalloc(size_t elemsize, uint32_t capacity)
+dynarr daalloc(size_t elemsize, uint32_t count)
 {
+    uint32_t capacity = count;
+
     if (capacity < 1) {
         capacity = 1;
     }
 
+    void* data = DYNARR_MALLOC(elemsize * capacity);
+    assert(data);
+
+    memset(data, 0, elemsize * capacity);
+
     return (dynarr){
-        .data = DYNARR_MALLOC(elemsize * capacity),
+        .data = data,
+        .size = elemsize * count,
         .elemsize = elemsize,
+        .count = count,
         .capacity = capacity,
     };
 }
@@ -126,10 +135,10 @@ void dareserve(dynarr* da, uint32_t capacity)
 {
     assert(da);
 
-    da->capacity = capacity;
-    size_t newsize = da->elemsize * da->capacity;
+    size_t newsize = da->elemsize * capacity;
     uint8_t* temp = DYNARR_REALLOC(da->data, newsize);
     if (temp) {
+        da->capacity = capacity;
         da->data = temp;
     }
 }
@@ -170,13 +179,8 @@ void* daset(dynarr* da, uint32_t i, const void* elem)
     assert(da);
     assert(elem);
 
-    if (i >= da->capacity) {
+    if (i >= da->count || i >= da->capacity) {
         return NULL;
-    }
-
-    if (i >= da->count) {
-        da->count = i + 1;
-        da->size = da->elemsize * da->count;
     }
 
     return memcpy(da->data + i * da->elemsize, elem, da->elemsize);

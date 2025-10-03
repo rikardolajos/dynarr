@@ -33,9 +33,37 @@ This differs from the C++ `std::vector` where `size` means the number of element
 For `dynarr`, the number of elements can be read from `count`.
 These fields should not be written to by the user.
 
+### Example usage
+```C
+/* Allocate new dynamic array with 5 int elements (zero-initialized) */
+dynarr da = daalloc(sizeof(int), 5);    
+
+/* Set element at index 3 to value 8 */
+int d = 8;
+void* dst = daset(&da, 3, &d);
+
+/* Pop (from the back) each element and print */
+while (da.count) {
+    int* i = dapop(&da, int);
+    printf("%d\n", *i);
+}
+
+/* Free dynamic array when we are done with it */
+dafree(&da);
+```
+
+Expected output:
+```
+0
+8
+0
+0
+0
+```
+
 For details of the implementation and which functions are available, check the header file.
 
-Some examples of usage can be found in the `test.c` file.
+More examples of usage can be found in the `test.c` file.
 
 
 ## Safety
