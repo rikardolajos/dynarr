@@ -94,8 +94,7 @@ void test_set()
     dynarr da = daalloc(sizeof(int), 10);
 
     for (int i = 0; i < 10; i++) {
-        int j = 25;
-        daset(&da, i, &j);
+        daset(&da, i, int, 25);
     }
 
     while (da.count) {
@@ -103,8 +102,8 @@ void test_set()
         assert(k == 25);
     }
 
-    int d = 1;
-    void* dst = daset(&da, 0, &d);
+    /* Out-of-bounds */
+    void* dst = daset(&da, 0, int, 1);
 
     if (dst) {
         printf("Error: expected NULL on out-of-bounds\n");
@@ -134,22 +133,6 @@ int main()
     test_set();
 
     printf("=== DYNARR TESTS COMPLETED ===\n");
-
-    /* Allocate new dynamic array with 5 int elements (zero-initialized) */
-    dynarr da = daalloc(sizeof(int), 5);
-
-    /* Set element at index 3 to value 8 */
-    int d = 8;
-    void* dst = daset(&da, 3, &d);
-
-    /* Pop each element and print */
-    while (da.count) {
-        int i = dapop(&da, int);
-        printf("%d\n", i);
-    }
-
-    /* Free dynamic array when we are done with it */
-    dafree(&da);
 
     return 0;
 }

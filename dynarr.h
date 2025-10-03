@@ -97,7 +97,8 @@ void* _daget(dynarr* da, uint32_t i);
  *  i       is the index, has to be less than da->count
  *  elem    is the new element set
  */
-void* daset(dynarr* da, uint32_t i, const void* elem);
+#define daset(da, i, type, elem) (_daset((da), (i), &(type){(elem)}))
+void* _daset(dynarr* da, uint32_t i, const void* elem);
 
 #ifdef DYNARR_IMPLEMENTATION
 
@@ -174,7 +175,7 @@ void* _daget(dynarr* da, uint32_t i)
     return da->data + i * da->elemsize;
 }
 
-void* daset(dynarr* da, uint32_t i, const void* elem)
+void* _daset(dynarr* da, uint32_t i, const void* elem)
 {
     assert(da);
     assert(elem);

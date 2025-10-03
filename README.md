@@ -36,16 +36,17 @@ These fields should not be written to by the user.
 ### Example usage
 ```C
 /* Allocate new dynamic array with 5 int elements (zero-initialized) */
-dynarr da = daalloc(sizeof(int), 5);    
+dynarr da = daalloc(sizeof(int), 5);
 
-/* Set element at index 3 to value 8 */
-int d = 8;
-void* dst = daset(&da, 3, &d);
+/* Set first three elements to 6, 7, 8 */
+daset(&da, 0, int, 6);
+daset(&da, 1, int, 7);
+daset(&da, 2, int, 8);
 
 /* Pop (from the back) each element and print */
 while (da.count) {
-    int* i = dapop(&da, int);
-    printf("%d\n", *i);
+    int n = dapop(&da, int);
+    printf("%d\n", n);
 }
 
 /* Free dynamic array when we are done with it */
@@ -55,10 +56,10 @@ dafree(&da);
 Expected output:
 ```
 0
+0
 8
-0
-0
-0
+7
+6
 ```
 
 For details of the implementation and which functions are available, check the header file.
