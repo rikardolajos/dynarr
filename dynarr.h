@@ -22,7 +22,7 @@
 #pragma once
 
 #include <assert.h>
-#include <memory.h>
+#include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -59,8 +59,8 @@ typedef struct {
  *  type    is the type of the elements
  *  count   is the number of elements to start with
  */
-#define daalloc(type, count) (_daalloc(sizeof(type), (count)))
-dynarr _daalloc(size_t elemsize, uint32_t count);
+#define daalloc(type, count) (daalloc_(sizeof(type), (count)))
+dynarr daalloc_(size_t elemsize, uint32_t count);
 
 /* Free allocated memory of the dynamic array and reset fields to zero.
  *
@@ -89,16 +89,16 @@ void dapush(dynarr* da, const void* elem);
  *
  *  da      is the dynamic array to pop from, must not be empty
  */
-#define dapop(da, type) (*((type*)_dapop((da))))
-void* _dapop(dynarr* da);
+#define dapop(da, type) (*((type*)dapop_((da))))
+void* dapop_(dynarr* da);
 
 /* Get an element at index i from the dynamic array.
  *
  *  da      is the dynamic array to get from
  *  i       is the index, has to be less than da->count
  */
-#define daget(da, i, type) (*((type*)_daget((da), (i))))
-void* _daget(dynarr* da, uint32_t i);
+#define daget(da, i, type) (*((type*)daget_((da), (i))))
+void* daget_(dynarr* da, uint32_t i);
 
 /* Set an element at index i in the dynamic array. Returns a pointer to where
  * the element is written, or NULL on failure.
@@ -107,12 +107,12 @@ void* _daget(dynarr* da, uint32_t i);
  *  i       is the index, has to be less than da->count
  *  elem    is the new element set
  */
-#define daset(da, i, type, elem) (_daset((da), (i), (type[]){(elem)}))
-void* _daset(dynarr* da, uint32_t i, const void* elem);
+#define daset(da, i, type, elem) (daset_((da), (i), (type[]){(elem)}))
+void* daset_(dynarr* da, uint32_t i, const void* elem);
 
 #ifdef DYNARR_IMPLEMENTATION
 
-dynarr _daalloc(size_t elemsize, uint32_t count)
+dynarr daalloc_(size_t elemsize, uint32_t count)
 {
     uint32_t capacity = count;
 
@@ -196,7 +196,7 @@ void dapush(dynarr* da, const void* elem)
     da->size = da->elemsize * da->count;
 }
 
-void* _dapop(dynarr* da)
+void* dapop_(dynarr* da)
 {
     DYNARR_ASSERT(da);
     DYNARR_ASSERT(da->count > 0);
@@ -207,7 +207,7 @@ void* _dapop(dynarr* da)
     return da->data + da->count * da->elemsize;
 }
 
-void* _daget(dynarr* da, uint32_t i)
+void* daget_(dynarr* da, uint32_t i)
 {
     DYNARR_ASSERT(da);
     DYNARR_ASSERT(i < da->count);
@@ -215,12 +215,12 @@ void* _daget(dynarr* da, uint32_t i)
     return da->data + i * da->elemsize;
 }
 
-void* _daset(dynarr* da, uint32_t i, const void* elem)
+void* daset_(dynarr* da, uint32_t i, const void* elem)
 {
     DYNARR_ASSERT(da);
     DYNARR_ASSERT(elem);
 
-    if (i >= da->count || i >= da->capacity) {
+    if (i >= da->count) {
         return NULL;
     }
 

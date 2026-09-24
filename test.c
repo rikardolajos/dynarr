@@ -139,7 +139,7 @@ void test_alloc_size_overflow()
 {
     /* elemsize * capacity used to wrap around to a tiny allocation */
     int calls = malloc_calls;
-    dynarr da = _daalloc(SIZE_MAX / 2 + 1, 2);
+    dynarr da = daalloc_(SIZE_MAX / 2 + 1, 2);
 
     CHECK(malloc_calls == calls);
     CHECK(da.data == NULL);
