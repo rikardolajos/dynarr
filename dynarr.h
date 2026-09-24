@@ -53,6 +53,9 @@ typedef struct {
 /* Allocate a new dynamic array. An allocated dynamic array has to be freed
  * using dafree(). Elements are zero-initialized.
  *
+ * On failure data is NULL and count and capacity are 0. The array can still be
+ * pushed to (which tries to allocate again) and freed.
+ *
  *  type    is the type of the elements
  *  count   is the number of elements to start with
  */
@@ -104,7 +107,7 @@ void* _daget(dynarr* da, uint32_t i);
  *  i       is the index, has to be less than da->count
  *  elem    is the new element set
  */
-#define daset(da, i, type, elem) (_daset((da), (i), &(type){(elem)}))
+#define daset(da, i, type, elem) (_daset((da), (i), (type[]){(elem)}))
 void* _daset(dynarr* da, uint32_t i, const void* elem);
 
 #ifdef DYNARR_IMPLEMENTATION
@@ -117,8 +120,17 @@ dynarr _daalloc(size_t elemsize, uint32_t count)
         capacity = 1;
     }
 
+    /* Return an empty array on failure, keeping elemsize so it can be pushed */
+    dynarr empty = {.elemsize = elemsize};
+
+    if (elemsize == 0 || capacity > SIZE_MAX / elemsize) {
+        return empty;
+    }
+
     void* data = DYNARR_MALLOC(elemsize * capacity);
-    DYNARR_ASSERT(data);
+    if (!data) {
+        return empty;
+    }
 
     memset(data, 0, elemsize * capacity);
 

@@ -72,6 +72,7 @@ More examples of usage can be found in the `test.c` file.
 No safety is guaranteed in `dynarr` and no error messages are returned.
 `dynarr` should be thought of as a small quality-of-life improvement over just using `malloc()` and `free()` directly.
 It may fail silently, for instance `dareserve()` will not give an error message if it failed to increase the capacity.
+Failures can be detected from the struct fields: if `daalloc()` fails, `data` is `NULL` and `count` is 0, and if `dapush()` fails, `count` is unchanged.
 
 
 ## License

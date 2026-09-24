@@ -51,16 +51,22 @@ void assert_failed(const char* cond, const char* file, int line)
     abort();
 }
 
+/* When fail_malloc or fail_realloc is set, the allocation returns NULL without
+ * touching any memory, so allocation failures can be tested */
+static int fail_malloc = 0;
+static int malloc_calls = 0;
+
 void* checked_malloc(size_t sz)
 {
+    malloc_calls++;
+    if (fail_malloc)
+        return NULL;
     void* p = malloc(sz);
     if (!p)
         printf("Unable to allocate memory\n");
     return p;
 }
 
-/* When fail_realloc is set, checked_realloc() returns NULL without touching
- * the memory, so growth failures can be tested */
 static int fail_realloc = 0;
 static int realloc_calls = 0;
 static size_t last_realloc_size = 0;
@@ -103,6 +109,42 @@ void test_alloc_in_if_else()
         da = daalloc(int, 1);
 
     CHECK(da.count == 8);
+
+    dafree(&da);
+}
+
+void test_alloc_failure()
+{
+    /* Used to assert, or crash in memset() with NDEBUG */
+    fail_malloc = 1;
+    dynarr da = daalloc(int, 5);
+    fail_malloc = 0;
+
+    CHECK(da.data == NULL);
+    CHECK(da.size == 0);
+    CHECK(da.elemsize == sizeof(int));
+    CHECK(da.count == 0);
+    CHECK(da.capacity == 0);
+
+    /* The failed array can still be used */
+    int i = 7;
+    dapush(&da, &i);
+    CHECK(da.count == 1);
+    CHECK(daget(&da, 0, int) == 7);
+
+    dafree(&da);
+}
+
+void test_alloc_size_overflow()
+{
+    /* elemsize * capacity used to wrap around to a tiny allocation */
+    int calls = malloc_calls;
+    dynarr da = _daalloc(SIZE_MAX / 2 + 1, 2);
+
+    CHECK(malloc_calls == calls);
+    CHECK(da.data == NULL);
+    CHECK(da.count == 0);
+    CHECK(da.capacity == 0);
 
     dafree(&da);
 }
@@ -301,11 +343,39 @@ void test_set()
     dafree(&da);
 }
 
+typedef struct {
+    int x;
+    float y;
+} point;
+
+void test_set_struct()
+{
+    /* Used to fail to compile, the struct initialized its first member */
+    dynarr da = daalloc(point, 2);
+
+    point p = {3, 4.5f};
+    void* dst = daset(&da, 1, point, p);
+    CHECK(dst != NULL);
+
+    point q = daget(&da, 1, point);
+    CHECK(q.x == 3);
+    CHECK(q.y == 4.5f);
+
+    /* The other element is left zero-initialized */
+    point r = daget(&da, 0, point);
+    CHECK(r.x == 0);
+    CHECK(r.y == 0.0f);
+
+    dafree(&da);
+}
+
 int main()
 {
     printf("Testing daalloc() and dafree()\n");
     test_alloc();
     test_alloc_in_if_else();
+    test_alloc_failure();
+    test_alloc_size_overflow();
 
     printf("Testing dareserve()\n");
     test_reserve();
@@ -326,6 +396,7 @@ int main()
 
     printf("Testing daset()\n");
     test_set();
+    test_set_struct();
 
     if (failures) {
         printf("=== DYNARR TESTS FAILED: %d check(s) ===\n", failures);
