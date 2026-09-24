@@ -85,14 +85,14 @@ void test_alloc()
     dynarr da = daalloc(int, 5);
 
     CHECK(da.data != NULL);
-    CHECK(da.size != 0);
+    CHECK(dasize(&da) == 5 * sizeof(int));
     CHECK(da.elemsize == sizeof(int));
     CHECK(da.count == 5);
     CHECK(da.capacity != 0);
 
     dafree(&da);
     CHECK(da.data == NULL);
-    CHECK(da.size == 0);
+    CHECK(dasize(&da) == 0);
     CHECK(da.elemsize == 0);
     CHECK(da.count == 0);
     CHECK(da.capacity == 0);
@@ -121,14 +121,13 @@ void test_alloc_failure()
     fail_malloc = 0;
 
     CHECK(da.data == NULL);
-    CHECK(da.size == 0);
+    CHECK(dasize(&da) == 0);
     CHECK(da.elemsize == sizeof(int));
     CHECK(da.count == 0);
     CHECK(da.capacity == 0);
 
     /* The failed array can still be used */
-    int i = 7;
-    dapush(&da, &i);
+    dapush(&da, int, 7);
     CHECK(da.count == 1);
     CHECK(daget(&da, 0, int) == 7);
 
@@ -204,15 +203,21 @@ void test_push()
     dynarr da = daalloc(int, 0);
 
     for (int i = 0; i < 10; i++) {
-        dapush(&da, &i);
+        dapush(&da, int, i);
     }
     CHECK(da.count == 10);
     CHECK(da.capacity >= 10);
-    CHECK(da.size == 10 * sizeof(int));
+    CHECK(dasize(&da) == 10 * sizeof(int));
 
     for (int i = 0; i < 10; i++) {
         CHECK(daget(&da, i, int) == i);
     }
+
+    /* Returns a pointer to the pushed element, and literals can be pushed */
+    int* p = dapush(&da, int, 25);
+    CHECK(p != NULL);
+    CHECK(p == &daget(&da, 10, int));
+    CHECK(*p == 25);
 
     dafree(&da);
 }
@@ -222,8 +227,7 @@ void test_push_zero_capacity()
     /* Capacity 0 used to "grow" to 2 * 0 = 0 and then write out of bounds */
     dynarr da = {.elemsize = sizeof(int)};
 
-    int i = 42;
-    dapush(&da, &i);
+    dapush(&da, int, 42);
     CHECK(da.count == 1);
     CHECK(da.capacity == 1);
     CHECK(daget(&da, 0, int) == 42);
@@ -235,20 +239,19 @@ void test_push_growth_failure()
 {
     dynarr da = daalloc(int, 0);
 
-    int i = 1;
-    dapush(&da, &i);
+    dapush(&da, int, 1);
     CHECK(da.count == 1);
     CHECK(da.capacity == 1);
 
     /* The array is full and cannot grow, the push must be dropped */
     fail_realloc = 1;
-    i = 2;
-    dapush(&da, &i);
+    void* dst = dapush(&da, int, 2);
     fail_realloc = 0;
 
+    CHECK(dst == NULL);
     CHECK(da.count == 1);
     CHECK(da.capacity == 1);
-    CHECK(da.size == sizeof(int));
+    CHECK(dasize(&da) == sizeof(int));
     CHECK(daget(&da, 0, int) == 1);
 
     dafree(&da);
@@ -260,26 +263,28 @@ void test_push_capacity_overflow()
      * realloc fails, and the pushes are dropped. */
     uint8_t b = 0;
 
-    /* Doubling 2^31 used to wrap around to 0 */
-    uint32_t half = UINT32_MAX / 2 + 1;
+    /* Doubling past the maximum must not wrap around */
+    size_t half = SIZE_MAX / 2 + 1;
     dynarr da = {.elemsize = 1, .count = half, .capacity = half};
 
     fail_realloc = 1;
-    dapush(&da, &b);
+    void* dst = dapush(&da, uint8_t, b);
     fail_realloc = 0;
 
-    CHECK(last_realloc_size == UINT32_MAX);
+    CHECK(dst == NULL);
+    CHECK(last_realloc_size == SIZE_MAX);
     CHECK(da.count == half);
     CHECK(da.capacity == half);
 
     /* Already at the maximum capacity, there is nothing to grow to */
-    dynarr full = {.elemsize = 1, .count = UINT32_MAX, .capacity = UINT32_MAX};
+    dynarr full = {.elemsize = 1, .count = SIZE_MAX, .capacity = SIZE_MAX};
 
     int calls = realloc_calls;
-    dapush(&full, &b);
+    dst = dapush(&full, uint8_t, b);
 
+    CHECK(dst == NULL);
     CHECK(realloc_calls == calls);
-    CHECK(full.count == UINT32_MAX);
+    CHECK(full.count == SIZE_MAX);
 }
 
 void test_pop()
@@ -287,7 +292,7 @@ void test_pop()
     dynarr da = daalloc(int, 0);
 
     for (int i = 0; i < 10; i++) {
-        dapush(&da, &i);
+        dapush(&da, int, i);
     }
 
     int i = 10;
@@ -296,10 +301,10 @@ void test_pop()
         CHECK(j == --i);
     }
     CHECK(da.count == 0);
-    CHECK(da.size == 0);
+    CHECK(dasize(&da) == 0);
     CHECK(i == 0);
 
-    /* Popping an empty array used to wrap count around to UINT32_MAX */
+    /* Popping an empty array used to wrap count around */
     CHECK_ASSERTS((void)dapop(&da, int));
     CHECK(da.count == 0);
 
@@ -310,8 +315,7 @@ void test_get()
 {
     dynarr da = daalloc(int, 0);
 
-    int i = 8;
-    dapush(&da, &i);
+    dapush(&da, int, 8);
 
     int j = daget(&da, 0, int);
     CHECK(j == 8);
@@ -339,6 +343,23 @@ void test_set()
     /* Out-of-bounds */
     void* dst = daset(&da, 0, int, 1);
     CHECK(dst == NULL);
+
+    dafree(&da);
+}
+
+void test_type_mismatch()
+{
+    dynarr da = daalloc(int, 1);
+
+    /* sizeof(double) != sizeof(int), so every typed macro must catch it */
+    CHECK_ASSERTS((void)dapush(&da, double, 1.0));
+    CHECK_ASSERTS((void)daset(&da, 0, double, 1.0));
+    CHECK_ASSERTS((void)daget(&da, 0, double));
+    CHECK_ASSERTS((void)dapop(&da, double));
+
+    /* Nothing was changed by the failed calls */
+    CHECK(da.count == 1);
+    CHECK(daget(&da, 0, int) == 0);
 
     dafree(&da);
 }
@@ -397,6 +418,9 @@ int main()
     printf("Testing daset()\n");
     test_set();
     test_set_struct();
+
+    printf("Testing element type checks\n");
+    test_type_mismatch();
 
     if (failures) {
         printf("=== DYNARR TESTS FAILED: %d check(s) ===\n", failures);

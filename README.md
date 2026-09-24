@@ -18,20 +18,23 @@ Allocate a dynamic array with `daalloc()`, and free the memory resources with `d
 Access the fields of the `dynarr` struct to see the details of the array:
 
 ```C
-typedef struct
-{
-    uint8_t *data;     /* Data stored */
-    size_t size;       /* Size in bytes of used array (elemsize * count) */
-    size_t elemsize;   /* Element size in bytes */
-    uint32_t count;    /* Number of elements */
-    uint32_t capacity; /* Capacity in number of elements */
+typedef struct {
+    uint8_t* data;   /* Data stored */
+    size_t elemsize; /* Element size in bytes */
+    size_t count;    /* Number of elements */
+    size_t capacity; /* Capacity in number of elements */
 } dynarr;
 ```
 
-Notice that the `size` field contains the size in bytes of the used portion of the array (i.e., excluding any extra reserved capacity).
+These fields should not be written to by the user.
+The size in bytes of the used portion of the array (i.e., excluding any extra reserved capacity) is given by `dasize(&da)`.
 This differs from the C++ `std::vector` where `size` means the number of elements.
 For `dynarr`, the number of elements can be read from `count`.
-These fields should not be written to by the user.
+
+The macros that take a type (`dapush()`, `dapop()`, `daget()`, and `daset()`) check that the size of the type matches the element size of the array.
+This catches most type mismatches, but not between types of the same size (e.g., `int` and `float`).
+
+`dapush()` and `dareserve()` may move the data, which invalidates any pointers into the array.
 
 ### Example usage
 ```C
@@ -42,6 +45,9 @@ dynarr da = daalloc(int, 5);
 daset(&da, 0, int, 6);
 daset(&da, 1, int, 7);
 daset(&da, 2, int, 8);
+
+/* Push 9 to the back, growing the array to 6 elements */
+dapush(&da, int, 9);
 
 /* Pop (from the back) each element and print */
 while (da.count) {
@@ -55,6 +61,7 @@ dafree(&da);
 
 Expected output:
 ```
+9
 0
 0
 8
@@ -72,7 +79,7 @@ More examples of usage can be found in the `test.c` file.
 No safety is guaranteed in `dynarr` and no error messages are returned.
 `dynarr` should be thought of as a small quality-of-life improvement over just using `malloc()` and `free()` directly.
 It may fail silently, for instance `dareserve()` will not give an error message if it failed to increase the capacity.
-Failures can be detected from the struct fields: if `daalloc()` fails, `data` is `NULL` and `count` is 0, and if `dapush()` fails, `count` is unchanged.
+Failures can still be detected: if `daalloc()` fails, `data` is `NULL` and `count` is 0, and if `dapush()` or `daset()` fails, it returns `NULL`.
 
 
 ## License
