@@ -129,7 +129,7 @@ void test_alloc_failure()
     /* The failed array can still be used */
     dapush(&da, int, 7);
     CHECK(da.count == 1);
-    CHECK(daget(&da, 0, int) == 7);
+    CHECK(daget(&da, int, 0) == 7);
 
     dafree(&da);
 }
@@ -210,13 +210,13 @@ void test_push()
     CHECK(dasize(&da) == 10 * sizeof(int));
 
     for (int i = 0; i < 10; i++) {
-        CHECK(daget(&da, i, int) == i);
+        CHECK(daget(&da, int, i) == i);
     }
 
     /* Returns a pointer to the pushed element, and literals can be pushed */
     int* p = dapush(&da, int, 25);
     CHECK(p != NULL);
-    CHECK(p == &daget(&da, 10, int));
+    CHECK(p == &daget(&da, int, 10));
     CHECK(*p == 25);
 
     dafree(&da);
@@ -230,7 +230,7 @@ void test_push_zero_capacity()
     dapush(&da, int, 42);
     CHECK(da.count == 1);
     CHECK(da.capacity == 1);
-    CHECK(daget(&da, 0, int) == 42);
+    CHECK(daget(&da, int, 0) == 42);
 
     dafree(&da);
 }
@@ -252,7 +252,7 @@ void test_push_growth_failure()
     CHECK(da.count == 1);
     CHECK(da.capacity == 1);
     CHECK(dasize(&da) == sizeof(int));
-    CHECK(daget(&da, 0, int) == 1);
+    CHECK(daget(&da, int, 0) == 1);
 
     dafree(&da);
 }
@@ -317,12 +317,12 @@ void test_get()
 
     dapush(&da, int, 8);
 
-    int j = daget(&da, 0, int);
+    int j = daget(&da, int, 0);
     CHECK(j == 8);
 
     /* Out-of-bounds, even though index 1 is within the capacity */
     dareserve(&da, 4);
-    CHECK_ASSERTS((void)daget(&da, 1, int));
+    CHECK_ASSERTS((void)daget(&da, int, 1));
 
     dafree(&da);
 }
@@ -332,7 +332,7 @@ void test_set()
     dynarr da = daalloc(int, 10);
 
     for (int i = 0; i < 10; i++) {
-        daset(&da, i, int, 25);
+        daset(&da, int, i, 25);
     }
 
     while (da.count) {
@@ -341,7 +341,7 @@ void test_set()
     }
 
     /* Out-of-bounds */
-    void* dst = daset(&da, 0, int, 1);
+    void* dst = daset(&da, int, 0, 1);
     CHECK(dst == NULL);
 
     dafree(&da);
@@ -353,13 +353,13 @@ void test_type_mismatch()
 
     /* sizeof(double) != sizeof(int), so every typed macro must catch it */
     CHECK_ASSERTS((void)dapush(&da, double, 1.0));
-    CHECK_ASSERTS((void)daset(&da, 0, double, 1.0));
-    CHECK_ASSERTS((void)daget(&da, 0, double));
+    CHECK_ASSERTS((void)daset(&da, double, 0, 1.0));
+    CHECK_ASSERTS((void)daget(&da, double, 0));
     CHECK_ASSERTS((void)dapop(&da, double));
 
     /* Nothing was changed by the failed calls */
     CHECK(da.count == 1);
-    CHECK(daget(&da, 0, int) == 0);
+    CHECK(daget(&da, int, 0) == 0);
 
     dafree(&da);
 }
@@ -375,15 +375,15 @@ void test_set_struct()
     dynarr da = daalloc(point, 2);
 
     point p = {3, 4.5f};
-    void* dst = daset(&da, 1, point, p);
+    void* dst = daset(&da, point, 1, p);
     CHECK(dst != NULL);
 
-    point q = daget(&da, 1, point);
+    point q = daget(&da, point, 1);
     CHECK(q.x == 3);
     CHECK(q.y == 4.5f);
 
     /* The other element is left zero-initialized */
-    point r = daget(&da, 0, point);
+    point r = daget(&da, point, 0);
     CHECK(r.x == 0);
     CHECK(r.y == 0.0f);
 

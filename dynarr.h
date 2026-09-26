@@ -22,9 +22,9 @@
 #pragma once
 
 #include <assert.h>
-#include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #ifndef DYNARR_MALLOC
 #define DYNARR_MALLOC(sz) malloc(sz)
@@ -102,8 +102,7 @@ void dareserve(dynarr* da, size_t capacity);
  *  type    is the type of the elements
  *  elem    is the new element to push
  */
-#define dapush(da, type, elem)                                                 \
-    (dapush_((da), (type[]){(elem)}, sizeof(type)))
+#define dapush(da, type, elem) (dapush_((da), (type[]){(elem)}, sizeof(type)))
 void* dapush_(dynarr* da, const void* elem, size_t elemsize);
 
 /* Pop an element from the back of the dynamic array.
@@ -117,23 +116,23 @@ void* dapop_(dynarr* da, size_t elemsize);
 /* Get an element at index i from the dynamic array.
  *
  *  da      is the dynamic array to get from
- *  i       is the index, has to be less than da->count
  *  type    is the type of the elements
+ *  i       is the index, has to be less than da->count
  */
-#define daget(da, i, type) (*((type*)daget_((da), (i), sizeof(type))))
-void* daget_(dynarr* da, size_t i, size_t elemsize);
+#define daget(da, type, i) (*((type*)daget_((da), sizeof(type), (i))))
+void* daget_(dynarr* da, size_t elemsize, size_t i);
 
 /* Set an element at index i in the dynamic array. Returns a pointer to where
  * the element is written, or NULL on failure.
  *
  *  da      is the dynamic array to set to
- *  i       is the index, has to be less than da->count
  *  type    is the type of the elements
+ *  i       is the index, has to be less than da->count
  *  elem    is the new element set
  */
-#define daset(da, i, type, elem)                                               \
-    (daset_((da), (i), (type[]){(elem)}, sizeof(type)))
-void* daset_(dynarr* da, size_t i, const void* elem, size_t elemsize);
+#define daset(da, type, i, elem)                                               \
+    (daset_((da), sizeof(type), (i), (type[]){(elem)}))
+void* daset_(dynarr* da, size_t elemsize, size_t i, const void* elem);
 
 #ifdef DYNARR_IMPLEMENTATION
 
@@ -233,7 +232,7 @@ void* dapop_(dynarr* da, size_t elemsize)
     return da->data + da->count * da->elemsize;
 }
 
-void* daget_(dynarr* da, size_t i, size_t elemsize)
+void* daget_(dynarr* da, size_t elemsize, size_t i)
 {
     DYNARR_ASSERT(da);
     DYNARR_ASSERT(elemsize == da->elemsize);
@@ -242,7 +241,7 @@ void* daget_(dynarr* da, size_t i, size_t elemsize)
     return da->data + i * da->elemsize;
 }
 
-void* daset_(dynarr* da, size_t i, const void* elem, size_t elemsize)
+void* daset_(dynarr* da, size_t elemsize, size_t i, const void* elem)
 {
     DYNARR_ASSERT(da);
     DYNARR_ASSERT(elem);
